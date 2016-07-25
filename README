@@ -1,0 +1,32 @@
+AWS firehose demo application
+
+==============================================
+Requirements: (linux OS based)
+
+	- install aws-sdk-cpp:
+		git clone https://github.com/aws/aws-sdk-cpp/
+			cd aws-sdk-cpp; mkdir build; cd build; cmake --no-warn-unused-cli -DBUILD_ONLY='firehose;sqs' ../; make -j4; sudo make install
+
+==============================================
+COMPILE
+	- usage; (NATIVE)
+		cd build
+			./build.sh
+
+	- usage; (CROSS)
+		cd build
+			#edit build.sh to source your toolchain shell script
+			./build.sh
+
+	- result:
+		2 output files are generated;
+			- firehose-application  (Test Application)
+			- libaws-firehose.a 	(Library to link against)
+
+===========================================================
+USAGE
+	- to run for example the test-application;
+		- be sure to create the S3 bucket with name you enter in the initQueue call;
+		- be sure to have your AWS credentials correctly in ~/.aws/credentials file
+
+

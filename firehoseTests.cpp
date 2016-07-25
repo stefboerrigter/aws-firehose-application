@@ -60,7 +60,7 @@ int main(int argc, char** argv)
   
     //start of class
     FirehoseLibraryClient app(streamName);
-    if(app.initQueue()) //success
+    if(app.initQueue("testbucketstef")) //success
     {
       app.sendMessage(buffer, amount_messages);
     }

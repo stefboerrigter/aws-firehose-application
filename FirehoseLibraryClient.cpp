@@ -31,13 +31,14 @@ static const int DATA_SIZE = (1024 * 200); //~200 KB
 
 //Constructor
 FirehoseLibraryClient::FirehoseLibraryClient(Aws::String streamName) :
-  m_firehoseClient(nullptr),
-  m_streamName(streamName)
+  m_firehoseClient(nullptr)
 {
   m_config.scheme = Scheme::HTTPS;
   //m_config.region = Region::EU_WEST_1;
   m_config.region = Region::US_EAST_1;
   
+  m_streamName = streamName;
+
   m_firehoseClient = new FirehoseClient(m_config);
 }
 
@@ -47,7 +48,7 @@ FirehoseLibraryClient::~FirehoseLibraryClient()
   
 }
 
-bool FirehoseLibraryClient::initQueue()
+bool FirehoseLibraryClient::initQueue(Aws::String bucketName)
 {
   auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", m_config);
 
@@ -58,23 +59,29 @@ bool FirehoseLibraryClient::initQueue()
   
   Aws::String user;
   Aws::IAM::Model::User data;
-  
+
+  m_bucketName = bucketName;
+
   accessManagementClient.GetUser(user, data);
 #ifdef DEBUG_INFO 
   cout << "Account ID : " << m_accountId << user <<endl;
 #endif
   
   CreateDeliveryStreamRequest request;
+  Aws::String streamName = "ssss";
+  //streamName = "" + m_streamName;
   request.SetDeliveryStreamName(m_streamName);
   
   S3DestinationConfiguration s3Config;
 
   //TBD; role is fixed now... 
   Aws::String roleARN = "arn:aws:iam::" + m_accountId + ":role/firehose_delivery_role";
+  Aws::String bucketARN = "arn::aws::s3:::" + m_bucketName;
+  Aws::String bucketPrefix = "prefix_";
   
   s3Config.SetRoleARN(roleARN);
-  s3Config.SetBucketARN("arn:aws:s3:::testbucketstef");
-  s3Config.SetPrefix("stef_");
+  s3Config.SetBucketARN(bucketARN);
+  s3Config.SetPrefix(bucketPrefix);
   s3Config.SetBufferingHints(BufferingHints());
   s3Config.SetCompressionFormat(CompressionFormat::UNCOMPRESSED);
   s3Config.SetEncryptionConfiguration(EncryptionConfiguration());

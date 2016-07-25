@@ -10,12 +10,13 @@ class FirehoseLibraryClient
     Aws::Client::ClientConfiguration m_config;
     Aws::Firehose::FirehoseClient *m_firehoseClient;
     Aws::String m_streamName;
+    Aws::String m_bucketName;
 
   public:
     FirehoseLibraryClient(Aws::String name);
     ~FirehoseLibraryClient();
     
-    bool initQueue();
+    bool initQueue(Aws::String bucketName);
     
     bool sendMessage(const Aws::StringStream& data, int repetitions = 0);
 };

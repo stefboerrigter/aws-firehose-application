@@ -10,7 +10,7 @@ ELSE()
 
 ENDIF (NOT CMAKE_BUILD_TYPE)
 
-#OPTION(BUILD_SHARED_LIBS "Use shared libraries" OFF)
+OPTION(BUILD_SHARED_LIBS "Use shared libraries" OFF)
 
 #no optimalisation for eclipse debugging
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -28,6 +28,16 @@ set(INCLUDE_DIRECTORIES
 
 include_directories(${INCLUDE_DIRECTORIES})
 
+# Workaround for cross build. This is workaround because cmake still thinks it
+# is doing standard and not a cross build. See CMAKE_CROSSCOMPILING value to
+# see for yourself. Since the system is  we can use this workaround at
+# the moment.
+# More stuff about cross compiling is here:
+#   https://cmake.org/Wiki/CMake_Cross_Compiling
+IF (CMAKE_SYSTEM_NAME STREQUAL Linux AND NOT CMAKE_TOOLCHAIN_FILE)
+    SET(CMAKE_FIND_ROOT_PATH $ENV{OECORE_TARGET_SYSROOT})
+ENDIF ()
+
 find_library(AWS_SDK_CORE aws-cpp-sdk-core)
 #find_library(AWS_SDK_SQS aws-cpp-sdk-sqs)
 find_library(AWS_SDK_AM aws-cpp-sdk-access-management)
@@ -42,7 +52,12 @@ if((NOT AWS_SDK_CORE) OR (NOT AWS_SDK_AM) OR (NOT AWS_SDK_COG) OR (NOT AWS_SDK_F
 	message("-- ${AWS_SDK_AM}")
 	message("-- ${AWS_SDK_CORE}")
 	message("-- ${AWS_SDK_IAM}")
-	
+else()
+	message("-- ${AWS_SDK_FH}")
+	message("-- ${AWS_SDK_COG}")
+	message("-- ${AWS_SDK_AM}")
+	message("-- ${AWS_SDK_CORE}")
+	message("-- ${AWS_SDK_IAM}")	
 endif()
 
 SET( FIREHOSE_SOURCES
