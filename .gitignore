@@ -1,0 +1,8 @@
+.*
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+aws_sdk_*.log
+firehose-application
+libaws-firehose.a
