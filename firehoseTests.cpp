@@ -26,7 +26,8 @@ int main(int argc, char** argv)
     Aws::String handle;
     options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
     Aws::InitAPI(options);
-    Aws::String streamName("test-default-queue-name");
+    std::string streamName("test-default-queue-name");
+    std::string bucketName("testbucketstef");
     int amount_messages = 1;
       
     std::string paramAmount("-n");
@@ -55,14 +56,12 @@ int main(int argc, char** argv)
     }
     
     std::ifstream fc("demofile.txt", std::ios_base::in | std::ios_base::binary);
-    Aws::StringStream buffer;
-    buffer << fc.rdbuf();
   
     //start of class
-    FirehoseLibraryClient app(streamName);
-    if(app.initQueue("testbucketstef")) //success
+    FirehoseLibraryClient app(streamName, bucketName);
+    if(app.initQueue()) //success
     {
-      app.sendMessage(buffer, amount_messages);
+      app.sendMessage(fc, amount_messages);
     }
     
     Aws::ShutdownAPI(options);

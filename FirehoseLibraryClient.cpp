@@ -1,15 +1,15 @@
 #include "FirehoseLibraryClient.h"
 #include <aws/core/client/CoreErrors.h>
 #include <aws/core/auth/AWSCredentialsProviderChain.h>
-#include <aws/core/utils/json/JsonSerializer.h>
-#include <aws/core/utils/xml/XmlSerializer.h>
 
 #include <aws/core/utils/Outcome.h>
 #include <aws/access-management/AccessManagementClient.h>
 #include <aws/iam/IAMClient.h>
 #include <aws/cognito-identity/CognitoIdentityClient.h>
 
-//Verified includes:
+
+#include <aws/core/utils/memory/stl/AWSStringStream.h>
+#include <aws/firehose/FirehoseClient.h>
 #include <aws/firehose/model/CreateDeliveryStreamRequest.h>
 #include <aws/firehose/model/S3DestinationConfiguration.h>
 
@@ -22,22 +22,19 @@ using namespace Aws;
 using namespace Aws::Http;
 using namespace Aws::Auth;
 using namespace Aws::Client;
-using namespace Aws::Client;
 using namespace Aws::Firehose;
 using namespace Aws::Firehose::Model;
 using namespace Aws::Utils::Json;
 
-static const int DATA_SIZE = (1024 * 200); //~200 KB 
-
 //Constructor
-FirehoseLibraryClient::FirehoseLibraryClient(Aws::String streamName) :
-  m_firehoseClient(nullptr)
+FirehoseLibraryClient::FirehoseLibraryClient(string streamName, std::string bucketName) :
+  m_firehoseClient(nullptr),
+  m_streamName(streamName),
+  m_bucketName(bucketName)
 {
   m_config.scheme = Scheme::HTTPS;
   //m_config.region = Region::EU_WEST_1;
   m_config.region = Region::US_EAST_1;
-  
-  m_streamName = streamName;
 
   m_firehoseClient = new FirehoseClient(m_config);
 }
@@ -48,39 +45,36 @@ FirehoseLibraryClient::~FirehoseLibraryClient()
   
 }
 
-bool FirehoseLibraryClient::initQueue(Aws::String bucketName)
+bool FirehoseLibraryClient::initQueue()
 {
   auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", m_config);
 
   auto iamClient = Aws::MakeShared<Aws::IAM::IAMClient>("QueueOperationTest", m_config);
   Aws::AccessManagement::AccessManagementClient accessManagementClient(iamClient, cognitoClient);
   
-  Aws::String m_accountId = accessManagementClient.GetAccountId();
+  Aws::String accountId = accessManagementClient.GetAccountId();
   
   Aws::String user;
   Aws::IAM::Model::User data;
 
-  m_bucketName = bucketName;
-
   accessManagementClient.GetUser(user, data);
 #ifdef DEBUG_INFO 
-  cout << "Account ID : " << m_accountId << user <<endl;
+  cout << "Account ID : " << accountId << user <<endl;
 #endif
   
   CreateDeliveryStreamRequest request;
-  Aws::String streamName = "ssss";
-  //streamName = "" + m_streamName;
-  request.SetDeliveryStreamName(m_streamName);
-  
+
+  request.SetDeliveryStreamName(m_streamName.c_str());
+
   S3DestinationConfiguration s3Config;
 
   //TBD; role is fixed now... 
-  Aws::String roleARN = "arn:aws:iam::" + m_accountId + ":role/firehose_delivery_role";
-  Aws::String bucketARN = "arn::aws::s3:::" + m_bucketName;
+  Aws::String roleARN = "arn:aws:iam::" + accountId + ":role/firehose_delivery_role";
+  string bucketARN("arn:aws:s3:::" + m_bucketName);
   Aws::String bucketPrefix = "prefix_";
-  
+
   s3Config.SetRoleARN(roleARN);
-  s3Config.SetBucketARN(bucketARN);
+  s3Config.SetBucketARN(bucketARN.c_str());
   s3Config.SetPrefix(bucketPrefix);
   s3Config.SetBufferingHints(BufferingHints());
   s3Config.SetCompressionFormat(CompressionFormat::UNCOMPRESSED);
@@ -99,28 +93,31 @@ bool FirehoseLibraryClient::initQueue(Aws::String bucketName)
     return true;
   }else if (outcome.GetError().GetErrorType() == FirehoseErrors::LIMIT_EXCEEDED){
     cout << "Limit Exceeded "<< endl;
-  }else if (outcome.GetError().GetErrorType() == FirehoseErrors::UNKNOWN){
-    cout << "Unknown error "<< endl;
   }else if (outcome.GetError().GetErrorType() == FirehoseErrors::ACCESS_DENIED){
     cout << "Access Denied "<< endl;
   }else{
-    cout << "Other error.... "<< endl;
+    cout << "Other error.... [" << outcome.GetError().GetMessage() << "]" << endl;
   }
   return false;
 }
 
-bool FirehoseLibraryClient::sendMessage(const Aws::StringStream& data, int repetitions/* = 0*/)
+bool FirehoseLibraryClient::sendMessage(const ifstream& data, int repetitions/* = 0*/)
 {
   
   PutRecordRequest request;
   //set stream name;
-  request.SetDeliveryStreamName(m_streamName);
+  Aws::String __streamName("TMP");
+  request.SetDeliveryStreamName(m_streamName.c_str());
   
   Record record;
+
+  Aws::StringStream dataStream;
+  dataStream << data.rdbuf();
+
 #ifdef DEBUG_INFO  
-  cout << "Buff Size to transfer: [" << data.str().length() << "]" << endl;
+  cout << "Buff Size to transfer: [" << dataStream.str().length() << "]" << endl;
 #endif
-  Aws::Utils::ByteBuffer buff((unsigned char*)data.str().c_str(), data.str().length());
+  Aws::Utils::ByteBuffer buff((unsigned char*)dataStream.str().c_str(), dataStream.str().length());
   
   //apply stream data to record buffer Data
   record.SetData(buff);

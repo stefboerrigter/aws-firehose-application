@@ -1,22 +1,28 @@
 #pragma once
 
-#include <aws/firehose/FirehoseClient.h>
+#include <fstream>
+
+namespace Aws {
+	namespace Firehose{
+		class FirehoseClient;
+	}
+}
+
 #include <aws/core/client/ClientConfiguration.h>
-#include <aws/core/utils/memory/stl/AWSStringStream.h>
 
 class FirehoseLibraryClient
 {
   private:
-    Aws::Client::ClientConfiguration m_config;
-    Aws::Firehose::FirehoseClient *m_firehoseClient;
-    Aws::String m_streamName;
-    Aws::String m_bucketName;
+	Aws::Client::ClientConfiguration m_config;
+	Aws::Firehose::FirehoseClient *m_firehoseClient;
+    std::string m_streamName;
+    std::string m_bucketName;
 
   public:
-    FirehoseLibraryClient(Aws::String name);
+    FirehoseLibraryClient(std::string name, std::string bucketName);
     ~FirehoseLibraryClient();
     
-    bool initQueue(Aws::String bucketName);
+    bool initQueue();
     
-    bool sendMessage(const Aws::StringStream& data, int repetitions = 0);
+    bool sendMessage(const std::ifstream &data, int repetitions = 0);
 };
