@@ -6,18 +6,22 @@ namespace Aws {
 	namespace Firehose{
 		class FirehoseClient;
 	}
+	namespace Client{
+		class ClientConfiguration;
+	}
+	class SDKOptions;
 }
 
-#include <aws/core/client/ClientConfiguration.h>
+
 
 class FirehoseLibraryClient
 {
   private:
-	Aws::Client::ClientConfiguration m_config;
+	Aws::Client::ClientConfiguration* m_config;
 	Aws::Firehose::FirehoseClient *m_firehoseClient;
     std::string m_streamName;
     std::string m_bucketName;
-
+    Aws::SDKOptions *m_options;
   public:
     FirehoseLibraryClient(std::string name, std::string bucketName);
     ~FirehoseLibraryClient();

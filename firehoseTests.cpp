@@ -14,18 +14,16 @@
   */
 
 //#include <aws/external/gtest.h>
-#include <aws/core/Aws.h>
+
 #include "FirehoseLibraryClient.h"
 
+#include <iostream>
 #include <fstream>
 
 int main(int argc, char** argv)
 {
     std::cout << "Starting Firehose Test " << std::endl;
-    Aws::SDKOptions options;
-    Aws::String handle;
-    options.loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
-    Aws::InitAPI(options);
+
     std::string streamName("test-default-queue-name");
     std::string bucketName("testbucketstef");
     int amount_messages = 1;
@@ -64,7 +62,7 @@ int main(int argc, char** argv)
       app.sendMessage(fc, amount_messages);
     }
     
-    Aws::ShutdownAPI(options);
+
     return 0;
 }
 

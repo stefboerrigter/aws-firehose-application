@@ -1,4 +1,5 @@
 #include "FirehoseLibraryClient.h"
+#include <aws/core/Aws.h>
 #include <aws/core/client/CoreErrors.h>
 #include <aws/core/auth/AWSCredentialsProviderChain.h>
 
@@ -7,6 +8,7 @@
 #include <aws/iam/IAMClient.h>
 #include <aws/cognito-identity/CognitoIdentityClient.h>
 
+#include <aws/core/client/ClientConfiguration.h>
 
 #include <aws/core/utils/memory/stl/AWSStringStream.h>
 #include <aws/firehose/FirehoseClient.h>
@@ -29,27 +31,33 @@ using namespace Aws::Utils::Json;
 //Constructor
 FirehoseLibraryClient::FirehoseLibraryClient(string streamName, std::string bucketName) :
   m_firehoseClient(nullptr),
+  m_config(new ClientConfiguration()),
   m_streamName(streamName),
-  m_bucketName(bucketName)
+  m_bucketName(bucketName),
+  m_options(new Aws::SDKOptions())
 {
-  m_config.scheme = Scheme::HTTPS;
-  //m_config.region = Region::EU_WEST_1;
-  m_config.region = Region::US_EAST_1;
+  //m_options = new Aws::SDKOptions;
+  m_options->loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
+  Aws::InitAPI(*m_options);
 
-  m_firehoseClient = new FirehoseClient(m_config);
+  m_config->scheme = Scheme::HTTPS;
+  //m_config.region = Region::EU_WEST_1;
+  m_config->region = Region::US_EAST_1;
+
+  m_firehoseClient = new FirehoseClient(*m_config);
 }
 
 //destructor
 FirehoseLibraryClient::~FirehoseLibraryClient()
 {
-  
+	Aws::ShutdownAPI(*m_options);
 }
 
 bool FirehoseLibraryClient::initQueue()
 {
-  auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", m_config);
+  auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", *m_config);
 
-  auto iamClient = Aws::MakeShared<Aws::IAM::IAMClient>("QueueOperationTest", m_config);
+  auto iamClient = Aws::MakeShared<Aws::IAM::IAMClient>("QueueOperationTest", *m_config);
   Aws::AccessManagement::AccessManagementClient accessManagementClient(iamClient, cognitoClient);
   
   Aws::String accountId = accessManagementClient.GetAccountId();
