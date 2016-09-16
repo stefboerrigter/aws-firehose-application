@@ -29,9 +29,6 @@ class FirehoseLibraryClient
     ~FirehoseLibraryClient();
     
     bool initQueue();
-    
-    void setName(std::string name);
-    void setBucket(std::string bucket);
 
     bool sendMessage(const std::ifstream &data, int repetitions = 0);
 };

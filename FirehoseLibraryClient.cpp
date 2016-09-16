@@ -35,26 +35,6 @@ FirehoseLibraryClient::FirehoseLibraryClient(string streamName, std::string buck
   m_streamName(streamName),
   m_bucketName(bucketName),
   m_options(new Aws::SDKOptions()),
-  m_initialized(true)
-{
-  //m_options = new Aws::SDKOptions;
-  m_options->loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
-  Aws::InitAPI(*m_options);
-
-  m_config->scheme = Scheme::HTTPS;
-  m_config->region = Region::US_EAST_1;
-
-  m_firehoseClient = new FirehoseClient(*m_config);
-}
-
-
-//Constructor
-FirehoseLibraryClient::FirehoseLibraryClient() :
-  m_firehoseClient(nullptr),
-  m_config(new ClientConfiguration()),
-  m_options(new Aws::SDKOptions()),
-  m_streamName(""),
-  m_bucketName(""),
   m_initialized(false)
 {
   //m_options = new Aws::SDKOptions;
@@ -67,6 +47,7 @@ FirehoseLibraryClient::FirehoseLibraryClient() :
   m_firehoseClient = new FirehoseClient(*m_config);
 }
 
+
 //destructor
 FirehoseLibraryClient::~FirehoseLibraryClient()
 {
@@ -75,11 +56,6 @@ FirehoseLibraryClient::~FirehoseLibraryClient()
 
 bool FirehoseLibraryClient::initQueue()
 {
-  if(!m_initialized)
-  {
-	return false;
-  }
-
   auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", *m_config);
   auto iamClient = Aws::MakeShared<Aws::IAM::IAMClient>("QueueOperationTest", *m_config);
   Aws::AccessManagement::AccessManagementClient accessManagementClient(iamClient, cognitoClient);
@@ -117,6 +93,7 @@ bool FirehoseLibraryClient::initQueue()
   if (outcome.IsSuccess())
   {
     cout << "Succesfull created new deliverystream [" << m_streamName << "]" << endl ;
+    m_initialized = true;
     return true;
   }else if (outcome.GetError().GetErrorType() == FirehoseErrors::RESOURCE_IN_USE){
 #ifdef DEBUG_INFO
@@ -173,22 +150,4 @@ bool FirehoseLibraryClient::sendMessage(const ifstream& data, int repetitions/* 
     }
   }
   return true;
-}
-
-void FirehoseLibraryClient::setName(string name)
-{
-	m_streamName = name;
-	if(!m_bucketName.compare(""))
-	{
-		m_initialized = true;
-	}
-
-}
-void FirehoseLibraryClient::setBucket(string bucket)
-{
-	m_bucketName = bucket;
-	if(!m_streamName.compare(""))
-	{
-		m_initialized = true;
-	}
 }
