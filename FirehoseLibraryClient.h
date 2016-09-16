@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <vector>
 
 namespace Aws {
 	namespace Firehose{
@@ -31,4 +32,5 @@ class FirehoseLibraryClient
     bool initQueue();
 
     bool sendMessage(const std::ifstream &data, int repetitions = 0);
+    bool sendMessage(const std::vector<char> &vectorData);
 };

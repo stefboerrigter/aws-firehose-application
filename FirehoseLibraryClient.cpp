@@ -99,6 +99,7 @@ bool FirehoseLibraryClient::initQueue()
 #ifdef DEBUG_INFO
     cout << "Resource in use, stream [" << m_streamName << "] exists already"<< endl;
 #endif
+    m_initialized = true;
     return true;
   }else if (outcome.GetError().GetErrorType() == FirehoseErrors::LIMIT_EXCEEDED){
     cout << "Limit Exceeded "<< endl;
@@ -114,6 +115,7 @@ bool FirehoseLibraryClient::sendMessage(const ifstream& data, int repetitions/* 
 {
   if(!m_initialized)
   {
+	cout << "Not Initialized." << endl;
 	return false;
   }
   
@@ -148,6 +150,47 @@ bool FirehoseLibraryClient::sendMessage(const ifstream& data, int repetitions/* 
       i = repetitions;
       return false;
     }
+  }
+  return true;
+}
+
+
+
+bool FirehoseLibraryClient::sendMessage(const std::vector<char>& dataVector)
+{
+  if(!m_initialized)
+  {
+	cout << "Not Initialized." << endl;
+	return false;
+  }
+
+  PutRecordRequest request;
+  //set stream name;
+  Aws::String __streamName("TMP");
+  request.SetDeliveryStreamName(m_streamName.c_str());
+
+  Record record;
+
+  //Aws::StringStream dataStream;
+  //dataStream << data.rdbuf();
+
+#ifdef DEBUG_INFO
+  cout << "Buff Size to transfer: [" << dataVector.size() << "]" << endl;
+#endif
+  Aws::Utils::ByteBuffer buff((unsigned char*)&dataVector[0], dataVector.size());
+
+  //apply stream data to record buffer Data
+  record.SetData(buff);
+
+  //set record to request
+  request.SetRecord(record);
+  //for loop is for testing purposes only
+  //send request to cloud
+  Model::PutRecordOutcome outcome = m_firehoseClient->PutRecord(request);
+  if(!outcome.IsSuccess())
+  {
+    cout << "Error sending message ." << endl;
+    return false;
   }
   return true;
 }

@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <vector>
 
 int main(int argc, char** argv)
 {
@@ -53,12 +54,19 @@ int main(int argc, char** argv)
        }
     }
     
+    std::vector<char>  my_vector;
+    my_vector.reserve(100);
+    for(int i = 0; i < 100; i++)
+    {
+    	my_vector.push_back((char)i);
+    }
     std::ifstream fc("demofile.txt", std::ios_base::in | std::ios_base::binary);
   
     //start of class
     FirehoseLibraryClient app(streamName, bucketName);
     if(app.initQueue()) //success
     {
+    	app.sendMessage(my_vector);
       app.sendMessage(fc, amount_messages);
     }
     
