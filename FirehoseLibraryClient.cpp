@@ -34,15 +34,35 @@ FirehoseLibraryClient::FirehoseLibraryClient(string streamName, std::string buck
   m_config(new ClientConfiguration()),
   m_streamName(streamName),
   m_bucketName(bucketName),
-  m_options(new Aws::SDKOptions())
+  m_options(new Aws::SDKOptions()),
+  m_initialized(true)
 {
   //m_options = new Aws::SDKOptions;
   m_options->loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
   Aws::InitAPI(*m_options);
 
   m_config->scheme = Scheme::HTTPS;
-  //m_config.region = Region::EU_WEST_1;
-  m_config->region = Region::US_WEST_2;
+  m_config->region = Region::US_EAST_1;
+
+  m_firehoseClient = new FirehoseClient(*m_config);
+}
+
+
+//Constructor
+FirehoseLibraryClient::FirehoseLibraryClient() :
+  m_firehoseClient(nullptr),
+  m_config(new ClientConfiguration()),
+  m_options(new Aws::SDKOptions()),
+  m_streamName(""),
+  m_bucketName(""),
+  m_initialized(false)
+{
+  //m_options = new Aws::SDKOptions;
+  m_options->loggingOptions.logLevel = Aws::Utils::Logging::LogLevel::Trace;
+  Aws::InitAPI(*m_options);
+
+  m_config->scheme = Scheme::HTTPS;
+  m_config->region = Region::US_EAST_1;
 
   m_firehoseClient = new FirehoseClient(*m_config);
 }
@@ -55,8 +75,12 @@ FirehoseLibraryClient::~FirehoseLibraryClient()
 
 bool FirehoseLibraryClient::initQueue()
 {
-  auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", *m_config);
+  if(!m_initialized)
+  {
+	return false;
+  }
 
+  auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", *m_config);
   auto iamClient = Aws::MakeShared<Aws::IAM::IAMClient>("QueueOperationTest", *m_config);
   Aws::AccessManagement::AccessManagementClient accessManagementClient(iamClient, cognitoClient);
   
@@ -111,6 +135,10 @@ bool FirehoseLibraryClient::initQueue()
 
 bool FirehoseLibraryClient::sendMessage(const ifstream& data, int repetitions/* = 0*/)
 {
+  if(!m_initialized)
+  {
+	return false;
+  }
   
   PutRecordRequest request;
   //set stream name;
@@ -145,4 +173,22 @@ bool FirehoseLibraryClient::sendMessage(const ifstream& data, int repetitions/* 
     }
   }
   return true;
+}
+
+void FirehoseLibraryClient::setName(string name)
+{
+	m_streamName = name;
+	if(!m_bucketName.compare(""))
+	{
+		m_initialized = true;
+	}
+
+}
+void FirehoseLibraryClient::setBucket(string bucket)
+{
+	m_bucketName = bucket;
+	if(!m_streamName.compare(""))
+	{
+		m_initialized = true;
+	}
 }

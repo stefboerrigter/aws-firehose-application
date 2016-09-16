@@ -22,11 +22,16 @@ class FirehoseLibraryClient
     std::string m_streamName;
     std::string m_bucketName;
     Aws::SDKOptions *m_options;
+    bool m_initialized;
   public:
+    FirehoseLibraryClient();
     FirehoseLibraryClient(std::string name, std::string bucketName);
     ~FirehoseLibraryClient();
     
     bool initQueue();
     
+    void setName(std::string name);
+    void setBucket(std::string bucket);
+
     bool sendMessage(const std::ifstream &data, int repetitions = 0);
 };
