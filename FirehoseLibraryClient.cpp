@@ -42,7 +42,7 @@ FirehoseLibraryClient::FirehoseLibraryClient(string streamName, std::string buck
 
   m_config->scheme = Scheme::HTTPS;
   //m_config.region = Region::EU_WEST_1;
-  m_config->region = Region::US_EAST_1;
+  m_config->region = Region::US_WEST_2;
 
   m_firehoseClient = new FirehoseClient(*m_config);
 }
