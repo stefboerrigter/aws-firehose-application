@@ -64,7 +64,7 @@ int main(int argc, char** argv)
   
     //start of class
     FirehoseLibraryClient app(streamName, bucketName);
-    if(app.initQueue()) //success
+    if(app.initQueue("bucketPrefix")) //success
     {
     	app.sendMessage(my_vector);
       app.sendMessage(fc, amount_messages);

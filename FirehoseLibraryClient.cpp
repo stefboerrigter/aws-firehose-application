@@ -54,7 +54,7 @@ FirehoseLibraryClient::~FirehoseLibraryClient()
 	Aws::ShutdownAPI(*m_options);
 }
 
-bool FirehoseLibraryClient::initQueue()
+bool FirehoseLibraryClient::initQueue(std::string bucketPrefix)
 {
   auto cognitoClient = Aws::MakeShared<Aws::CognitoIdentity::CognitoIdentityClient>("QueueOperationTest", *m_config);
   auto iamClient = Aws::MakeShared<Aws::IAM::IAMClient>("QueueOperationTest", *m_config);
@@ -79,11 +79,11 @@ bool FirehoseLibraryClient::initQueue()
   //TBD; role is fixed now... 
   Aws::String roleARN = "arn:aws:iam::" + accountId + ":role/firehose_delivery_role";
   string bucketARN("arn:aws:s3:::" + m_bucketName);
-  Aws::String bucketPrefix = "prefix_";
+  Aws::String _bucketPrefix = bucketPrefix.c_str();
 
   s3Config.SetRoleARN(roleARN);
   s3Config.SetBucketARN(bucketARN.c_str());
-  s3Config.SetPrefix(bucketPrefix);
+  s3Config.SetPrefix(_bucketPrefix);
   s3Config.SetBufferingHints(BufferingHints());
   s3Config.SetCompressionFormat(CompressionFormat::UNCOMPRESSED);
   s3Config.SetEncryptionConfiguration(EncryptionConfiguration());
