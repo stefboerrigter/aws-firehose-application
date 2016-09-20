@@ -62,12 +62,12 @@ bool FirehoseLibraryClient::initQueue(std::string bucketPrefix)
   
   Aws::String accountId = accessManagementClient.GetAccountId();
   
-  Aws::String user;
-  Aws::IAM::Model::User data;
+  //Aws::String user;
+  //Aws::IAM::Model::User data;
 
-  accessManagementClient.GetUser(user, data);
+  //accessManagementClient.GetUser(user, data);
 #ifdef DEBUG_INFO 
-  cout << "Account ID : " << accountId << user <<endl;
+  cout << "Account ID : " << accountId << /*user <<*/ endl;
 #endif
   
   CreateDeliveryStreamRequest request;
@@ -80,6 +80,7 @@ bool FirehoseLibraryClient::initQueue(std::string bucketPrefix)
   Aws::String roleARN = "arn:aws:iam::" + accountId + ":role/firehose_delivery_role";
   string bucketARN("arn:aws:s3:::" + m_bucketName);
   Aws::String _bucketPrefix = bucketPrefix.c_str();
+  _bucketPrefix += "_";
 
   s3Config.SetRoleARN(roleARN);
   s3Config.SetBucketARN(bucketARN.c_str());
